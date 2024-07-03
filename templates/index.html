@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Number Extractor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        #mobileNumbersContainer {
+            max-height: 300px; /* Set the maximum height for the container */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mobile Number Extractor</h1>
+        <form id="uploadForm" enctype="multipart/form-data">
+            <input type="file" id="imageInput" name="images" accept="image/*" multiple required>
+            <button type="submit">Extract Mobile Numbers</button>
+        </form>
+        <div id="result">
+            <h2>Extracted Mobile Numbers:</h2>
+            <div id="mobileNumbersContainer"> <!-- Wrap the list in a container -->
+                <ul id="mobileNumbersList"></ul>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('imageInput');
+            const files = fileInput.files;
+
+            // Create FormData object
+            const formData = new FormData();
+            for (let i = 0; i < files.length; i++) {
+                formData.append('images', files[i]);
+            }
+
+            // Send the files to the server
+            fetch('/extract_mobile_numbers', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const mobileNumbersList = document.getElementById('mobileNumbersList');
+                mobileNumbersList.innerHTML = '';
+
+                if (data.error) {
+                    mobileNumbersList.innerHTML = '<li>' + data.error + '</li>';
+                } else {
+                    data.mobile_numbers.forEach(number => {
+                        const listItem = document.createElement('li');
+                        listItem.textContent = number;
+                        mobileNumbersList.appendChild(listItem);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
